@@ -1,14 +1,14 @@
 Wykorzystywane rejestry:
 s:
-s0 - szerokość pobrana z pliku
-s1 - wysokość poraban z pliku
+s0 - wysokość pobrana z pliku
+s1 - szerokość poraban z pliku
 s2 - file offset pobrany z pliku
 s3 - size of pixel array
 s4 - wielkość paddingu
+s10 - aktualny adres sterty
 s11 - zapisany addres do sterty
 t w pętlach w których zmieniamy pixele:
-t0 - adres sterty który jest zwiększany
-t1 - tymczasowa wysokość
-t2 - tymczasowa szerokość
+t0 - tymczasowa wysokość
+t1 - tymczasowa szerokość
 t3, t4, t5 jest wykorzsytywane przy lb i sb ale można wykorzytać tak
 naprawdę tylko jeden
