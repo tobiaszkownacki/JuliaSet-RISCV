@@ -13,18 +13,18 @@ main:
 	la a0, InputPath
 	ecall       # open file
 
-	mv s11, a0   # save file description in s11
+	mv t2, a0   # save file description in t2
 
 	li t0, -1
 	la a0, ErrorMsg
-	beq t0, s11, print_error   # check if found file
+	beq t0, t2, print_error   # check if found file
 
 
 	li a7, 63
-	mv a0, s11
+	mv a0, t2
 	la a1, HeaderBuf   # load HeaderBuf address in a1
 	addi a1, a1, 2     # add 2 becasue signiature has only 2, dont have padding
-	li a2, 54
+	li a2, 54          # 54 if typical size of header
 	ecall              # read BMP header to HeaderBuff
 
 	lw s0, 18(a1)      # assign width to s0
@@ -38,24 +38,24 @@ main:
 	mv a0, s3
 	ecall              # allocate memmory for pixel arrey
 
-	mv s10, a0          # save address to allocated memmory in s10
+	mv s11, a0          # save address to allocated memmory in s11
 
 	li a7, 63
-	mv a0, s11
-	mv a1, s10
+	mv a0, t2
+	mv a1, s11
 	mv a2, s3
 	ecall             # read BMP pixel array to heap (t0)
 
 	li a7, 57
-	mv a0, s11        # close opened file
+	mv a0, t2        # close opened file
 	ecall
 
 	# ---- END OF READING FILE--------
 	# ---START OF MODYFING PIXEL ARRAY------
-	mv t2, s1        # assign temporary height to t2
-	addi t2, t2, 1   # add one because in height_loop it subtract one and comapre at once
+	mv t1, s1        # assign temporary height to t1
+	addi t1, t1, 1   # add one because in height_loop it subtract one and comapre at once
 
-	mv t0, s10       # move heap address to t0 (used in changing pixels)
+	mv t0, s11       # move heap address to t0 (used in changing pixels)
 	b calculate_padding
 
 	# ---END OF MODYFING PIXEL ARRAY------
@@ -71,7 +71,7 @@ write_to_file:
 
 	#li a7, 62   # LSeek to pizel array
 	#mv a0, t0
-	#li a1, 2   # TODO
+	#li a1, 2
 	#li a2, 1
 	#ecall
 
@@ -84,7 +84,7 @@ write_to_file:
 
 	li a7, 64    # Write pixel array to the file
 	mv a0, t0
-	mv a1, s10
+	mv a1, s11
 	mv a2, s3
 	ecall
 
@@ -122,36 +122,35 @@ add_padding:
 #-------------------- END OF add_padding Function-----------------------------
 #--------------------- START OF height_looop Function------------------------------
 height_loop:
-	mv t3, s0          # assign temporary width
+	mv t2, s0          # assign temporary width in t2
 
-	addi t2, t2, -1   # subtract one height
+	addi t1, t1, -1   # subtract one height
 
- 	beqz t2, write_to_file
+ 	beqz t1, write_to_file
 #--------------------- END OF height_looop Function------------------------------
 #--------------------- START OF pixel_calculations Function------------------------------
 pixel_calculations:
-	beqz t3, add_padding     # if temporary width == 0 go to padding
+	beqz t2, add_padding     # if temporary width == 0 go to padding
 
-	lb t4, (t0)   # load first RGP Byte
-	lb t5, 1(t0)  # load second RGP Byte
-	lb t6, 2(t0)  # load third RGP Byte
+	lb t3, (t0)   # load first RGP Byte
+	lb t4, 1(t0)  # load second RGP Byte
+	lb t5, 2(t0)  # load third RGP Byte
 
+	li t3, COLOR
 	li t4, COLOR
 	li t5, COLOR
-	li t6, COLOR
 
-	sb t4, (t0)
-	sb t5, 1(t0)
-	sb t6, 2(t0)
+	sb t3, (t0)
+	sb t4, 1(t0)
+	sb t5, 2(t0)
 
 	addi t0, t0, 3   # shift register to another pixel
 
 #--------------------- END OF pixel_calculations Function------------------------------
 #--------------------- START OF width_loop Function------------------------------
 width_loop:
-	#beqz t3, height_loop   # check if width is zero then return to height_loop
-	addi t3, t3, -1        # subtract one width
+	addi t2, t2, -1        # subtract one width
 
 	b pixel_calculations   # go to pixel_calculations
 #--------------------- END OF width_loop Function------------------------------
-	
+
