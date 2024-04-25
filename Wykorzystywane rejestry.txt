@@ -5,6 +5,10 @@ s1 - szerokość poraban z pliku
 s2 - file offset pobrany z pliku
 s3 - size of pixel array
 s4 - wielkość paddingu
+s5 - real part of constant
+s6 - imaginary part of constant
+s7 - skala o którą się poruszać na wysokości
+s8 - skala o którą się poruszać na szerokości
 s10 - aktualny adres sterty
 s11 - zapisany addres do sterty
 t w pętlach w których zmieniamy pixele:
