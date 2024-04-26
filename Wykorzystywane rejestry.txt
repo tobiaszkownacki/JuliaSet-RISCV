@@ -23,8 +23,10 @@ t6 - wartość real part of complex number w ciągu rekurencyjnym
 a:
 a7 - trzyma kod koloru który należy do Juli Set
 a6 - trzyma kod koloru białego który nie należy do Julii set
+a5 - trzyma warość BITS_ON_FRACTION - 1
 a4 - wartość 4, która jest potrzebna przy warunku wyjścia z pętli
 a3 i a2 jest wykorzystywane przy ciągu rekurencyjnym
+
 
 
  
