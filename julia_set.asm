@@ -3,10 +3,12 @@ HeaderBuf:	.space 56
 InputPath: 	.asciz "C:\\Users\\Tobiasz\\Desktop\\studia\\2sem\\arko_lab\\RISC-V\\PROJEKT\\example.bmp"
 ErrorMsg1: 	.asciz "File not found\n"
 ErrorMsg2:	.asciz "File BMP must be 24 bits per pixel\n"
-AskMsg1:	.asciz "Enter int part of real part of constant multiplied by 2^16\n"
-AskMsg2:	.asciz "Enter int part of imaginary part of constant multiplied by 2^16\n"
-.eqv	BITS_ON_FRACTION	16
-.eqv	COLOR 0xAA
+AskMsg1:	.asciz "Enter int part of real part of constant multiplied by 2^12\n"
+AskMsg2:	.asciz "Enter int part of imaginary part of constant multiplied by 2^12\n"
+.eqv	BITS_ON_FRACTION	12
+.eqv	WHITE	0xFF
+.eqv	BLACK	0x00
+.eqv	MAX_ITERATIONS	75
 	.text
 	.globl main
 
@@ -74,53 +76,119 @@ main:
 	ecall
 
 	# ---- END OF READING FILE--------------#
-	# ---START OF MODYFING PIXEL ARRAY------#
+	# ---START OF CALCULATE IMPORTANT FIGURE#
 	andi s4, s1, 3   # padding = width % 4  (andi is faster mr Niespodziany method. More on his github)
 
 	li t0, 4
 	slli t0, t0, BITS_ON_FRACTION
 
-	div s7, t0, s0    # assign width scale to s7
-	div s8, t0, s1   # assign height scale to s8
+	div s7, t0, s1    	# assign width scale to s7
+	div s8, t0, s0   	# assign height scale to s8
+
+	li s9, -2
+	slli s9, s9, BITS_ON_FRACTION   # a ssign to s9 starting real part of pixel
+	mv t2, s9                       # assign to t2 starting value of imaginary part
+	add t2, t2, s8                 # add one scale becasue in height_loop it subtract at once
+
+	mv t0, s0        	# assign temporary height to t0
+	addi t0, t0, 1   	# add one because in height_loop it subtract one and comapre at once
 
 
-	mv t0, s0        # assign temporary height to t0
-	addi t0, t0, 1   # add one because in height_loop it subtract one and comapre at once
+	li a7, BLACK    	# assign to a7 black color of pixel
+	li a6, WHITE    	# assign to a6 white color
 
-	mv s10, s11       # move heap address to s10 (used in changing pixels)
+	li t4, MAX_ITERATIONS	# assign number of iterations to t4
+	li a4, 4		# assign max complex modul ^2
+	slli a4, a4, BITS_ON_FRACTION
 
-	# ---END OF MODYFING PIXEL ARRAY------#
+	mv s10, s11       	# move heap address to s10 (used in changing pixels)
+
+	# ---END OF CALCULATE IMPORTANT FIGURE#
 #--------------------- START OF height_looop Function------------------------------------#
 height_loop:
+
 	mv t1, s1          # assign temporary width in t1
+	mv t3, s9          # assgin real part of complex number on -2
 
 	addi t0, t0, -1   # subtract one height
+	add t2, t2, s8
 
  	beqz t0, write_to_file
 #--------------------- END OF height_looop Function--------------------------------------#
-#--------------------- START OF pixel_calculations Function------------------------------#
-pixel_calculations:
+#-------------------- START OF preapare_to_pixel_check Function--------------------------#
+prepare_to_pixel_check:
+	li t4, MAX_ITERATIONS	# assign number of iterations to t4
 
-	lb t3, (s10)   # load first RGP Byte
-	lb t4, 1(s10)  # load second RGP Byte
-	lb t5, 2(s10)  # load third RGP Byte
+	mv t5, t2	# assign imaginary part of complex number to t5
+	mv t6, t3	# assign real part of complex number to t6
 
-	li t3, COLOR
-	li t4, COLOR
-	li t5, COLOR
+#-------------------- END OF preapare_to_pixel_check Function--------------------------#
+#--------------------- START OF pixel_check Function------------------------------------#
+pixel_check:
+      #      newRe = oldRe * oldRe - oldIm * oldIm + cRe;
+      #		newIm = 2 * oldRe * oldIm + cIm;
+      #		if((newRe * newRe + newIm * newIm) > 4) break;
 
-	sb t3, (s10)
-	sb t4, 1(s10)
-	sb t5, 2(s10)
+      #ebreak
 
-	addi s10, s10, 3   # shift register to another pixel
+      # ---Calculate new Real part----#
+      mul a3, t6, t6   			# oldRe * oldRe
+      srai a3, a3, BITS_ON_FRACTION
 
-#--------------------- END OF pixel_calculations Function------------------------------	#
+      mul a2, t5, t5   			# oldIm * oldIm
+      srai a2, a2, BITS_ON_FRACTION
+      sub a3, a3, a2   			# oldRe * oldRe - oldIm * oldIm
+      add a3, a3, s5   			# oldRe * oldRe - oldIm * oldIm + cRe;
+
+      # ---Calculate new imaginary part---#
+      mul t5, t5, t6  # oldIm * oldRe
+      srai t5, t5, BITS_ON_FRACTION
+      slli t5, t5, 1  # 2 * oldRe * oldIm
+      add t5, t5, s6 # 2 * oldRe * oldIm + cIm
+
+      mv t6, a3       # assign new Re to t6
+
+      # ---Calculate modul ----#
+
+      mul a2, t6, t6   # newRe * newRe
+      srai a2, a2, BITS_ON_FRACTION
+      mul a3, t5, a5   # newIm * newIm
+      srai a3, a3, BITS_ON_FRACTION
+      add a3, a3, a2   # newRe * newRe + newIm * newIm
+
+      bgt a3, a4, non_julia_pixel   # if sqrt(complex modul) > 4 go to non_julia_pixel
+
+      addi t4, t4, -1
+
+      bnez t4, pixel_check
+
+
+#--------------------- END OF pixel_check Function--------------------------------------#
+#-------------------- START OF julia_pixel Function-------------------------------------#
+julia_pixel:
+	sb a7, (s10)
+	sb a7, 1(s10)
+	sb a7, 2(s10)
+
+	addi s10, s10, 3
+	b width_loop
+#-------------------- END OF julia_pixel Function------------------------------------#
+#------------------- START OF non_julia_pixel Function-------------------------------#
+non_julia_pixel:
+
+	sb a6, (s10)
+	sb a6, 1(s10)
+	sb a6, 2(s10)
+
+	addi s10, s10, 3
+
+#------------------- END OF non_julia_pixel Function------------------------------------#
 #--------------------- START OF width_loop Function-------------------------------------#
 width_loop:
 	addi t1, t1, -1        # subtract one width
+	add t3, t3, s7         # add width scale
 
-	bnez t1, pixel_calculations     # if temporary width != 0 go to pixel_calculations else go to padding
+	bnez t1, prepare_to_pixel_check     # if temporary width != 0 go to preapre_to_pixel_check else go to padding
 
 #--------------------- END OF width_loop Function--------------------------------------#
 #--------------------- START OF add_padding Function-------------------------------------#
@@ -140,7 +208,6 @@ write_to_file:
 	mv t0, a0   # save file id to t0
 
 	li a7, 64     # write in the header header because lSeek does not work
-	mv a0, t0
 	la a1, HeaderBuf
 	addi a1, a1, 2
 	mv a2, s2
@@ -182,4 +249,3 @@ read_int:
 
 	ret
 #--------------------END OF read_int---------------------------------------------------#
-	

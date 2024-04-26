@@ -7,12 +7,24 @@ s3 - size of pixel array
 s4 - wielkość paddingu
 s5 - real part of constant
 s6 - imaginary part of constant
-s7 - skala o którą się poruszać na wysokości
-s8 - skala o którą się poruszać na szerokości
+s7 - skala o którą się poruszać na szerokości
+s8 - skala o którą się poruszać na wysokości
+s9 - startowa wartość real part of complex number po zaczęciu nowego wiersza
 s10 - aktualny adres sterty
 s11 - zapisany addres do sterty
 t w pętlach w których zmieniamy pixele:
 t0 - tymczasowa wysokość
 t1 - tymczasowa szerokość
-t3, t4, t5 jest wykorzsytywane przy lb i sb ale można wykorzytać tak
-naprawdę tylko jeden
+t2 - wartość imaginary part of complex number którą ma pixel
+t3 - wartość real part of complex number którą ma pixel
+t4 - aktualna ilość iteracji pętli julia_check
+t5 - wartość imaginary part of complex number w ciągu rekurencyjnym
+t6 - wartość real part of complex number w ciągu rekurencyjnym
+a:
+a7 - trzyma kod koloru który należy do Juli Set
+a6 - trzyma kod koloru białego który nie należy do Julii set
+a4 - wartość 4, która jest potrzebna przy warunku wyjścia z pętli
+a3 i a2 jest wykorzystywane przy ciągu rekurencyjnym
+
+
+ 
