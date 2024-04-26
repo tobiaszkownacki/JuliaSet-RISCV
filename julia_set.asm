@@ -152,7 +152,7 @@ pixel_check:
 
       mul a2, t6, t6   # newRe * newRe
       srai a2, a2, BITS_ON_FRACTION
-      mul a3, t5, a5   # newIm * newIm
+      mul a3, t5, t5   # newIm * newIm
       srai a3, a3, BITS_ON_FRACTION
       add a3, a3, a2   # newRe * newRe + newIm * newIm
 
