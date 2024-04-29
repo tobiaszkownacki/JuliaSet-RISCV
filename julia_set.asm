@@ -8,7 +8,7 @@ AskMsg2:	.asciz "Enter int part of imaginary part of constant multiplied by 2^13
 .eqv	BITS_ON_FRACTION	13
 .eqv	WHITE	0xFF
 .eqv	BLACK	0x00
-.eqv	MAX_ITERATIONS	75
+.eqv	MAX_ITERATIONS	40
 	.text
 	.globl main
 
@@ -31,13 +31,12 @@ main:
 	li a7, 1024
 	li a1, 0
 	la a0, InputPath
-	ecall			# open file
+	ecall				# open file
 
-	mv t2, a0		# save file description in t2
+	mv t2, a0			# save file description in t2
 
-	li t0, -1
-	la a0, ErrorMsg1	# load error message
-	beq t0, t2, print_error	# check if found file
+	la a0, ErrorMsg1		# load error message
+	blt t2, zero, print_error	# check if found file
 
 
 	li a7, 63
