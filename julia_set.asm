@@ -68,7 +68,7 @@ main:
 	mv a0, t2
 	mv a1, s11
 	mv a2, s3
-	ecall            	# read BMP pixel array to heap (t0)
+	ecall            	# read BMP pixel array to heap
 
 	li a7, 57
 	mv a0, t2        	# close opened file
@@ -76,9 +76,9 @@ main:
 
 	# ---- END OF READING FILE--------------#
 	# ---START OF CALCULATE IMPORTANT FIGURE#
-	andi s4, s1, 3   	# padding = width % 4  (andi is faster mr Niespodziany method. More on his github)
+	andi s4, s1, 3   	# padding = width % 4  (andi is faster  2^n - 1)
 
-	li t0, 3                # 2 * 1,5
+	li t0, 3                # 2 * 1,5 ( x and y min is -1.5, x and y max is 1.5)
 	slli t0, t0, BITS_ON_FRACTION
 
 	div s7, t0, s1    	# assign width scale to s7
@@ -100,7 +100,7 @@ main:
 	li a6, WHITE    	# assign to a6 white color
 
 	li t4, MAX_ITERATIONS	# assign number of iterations to t4
-	li a4, 4		# assign max complex modul ^2
+	li a4, 4		# assign max complex modul^2
 	slli a4, a4, BITS_ON_FRACTION
 
 	mv s10, s11       	# move heap address to s10 (used in changing pixels)
@@ -127,7 +127,7 @@ prepare_to_pixel_check:
 #-------------------- END OF preapare_to_pixel_check Function---------------------------#
 #--------------------- START OF pixel_check Function------------------------------------#
 pixel_check:
-      #      newRe = oldRe * oldRe - oldIm * oldIm + cRe;
+      #		newRe = oldRe * oldRe - oldIm * oldIm + cRe;
       #		newIm = 2 * oldRe * oldIm + cIm;
       #		if((newRe * newRe + newIm * newIm) > 4) break;
 
@@ -155,7 +155,7 @@ pixel_check:
       srai a3, a3, BITS_ON_FRACTION
       add a3, a3, a2		# newRe * newRe + newIm * newIm
 
-      bgt a3, a4, non_julia_pixel  # if sqrt(complex modul) > 4 go to non_julia_pixel
+      bgt a3, a4, non_julia_pixel  # if modul > 4 go to non_julia_pixel
 
       addi t4, t4, -1
 
@@ -206,7 +206,7 @@ write_to_file:
 
 	mv t0, a0		# save file id to t0
 
-	li a7, 64		# write in the header header because lSeek does not work
+	li a7, 64		# write in the header header because LSeek does not work
 	la a1, HeaderBuf
 	addi a1, a1, 2
 	mv a2, s2
@@ -248,4 +248,3 @@ read_int:
 
 	ret
 #--------------------END OF read_int---------------------------------------------------#
-
